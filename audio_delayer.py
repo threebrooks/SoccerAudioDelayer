@@ -33,7 +33,7 @@ class AudioProcessor:
             self.audio_write_chunk_idx.value += 1
 
     def pusherFunc(self):
-        self.audio_play = subprocess.Popen(['aplay','-c','2','-t','raw','-r',str(sampling_rate),'-f','S16_LE','-'],stdin=subprocess.PIPE) 
+        self.audio_play = subprocess.Popen(['aplay','-D','hw:CARD=Device,DEV=0','-c','2','-t','raw','-r',str(sampling_rate),'-f','S16_LE','-'],stdin=subprocess.PIPE) 
         while (True):
             if (self.audio_read_chunk_idx.value >= self.audio_write_chunk_idx.value):
                 time.sleep(audio_chunk_size/(bytes_per_sample*sampling_rate))
