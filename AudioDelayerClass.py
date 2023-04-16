@@ -6,7 +6,10 @@ import time
 import sys
 
 class AudioDelayer:
-    def __init__(self, stream_url, output_sampling_rate=44100, bytes_per_sample=2, audio_chunk_size=4096, buffer_num_audio_chunks=2500):
+    def __init__(self, stream_url, output_sampling_rate=44100, bytes_per_sample=2, audio_chunk_size=88200, buffer_num_audio_chunks=2500):
+        self.bytes_per_sample = bytes_per_sample
+        self.output_sampling_rate = output_sampling_rate
+        self.audio_chunk_size = audio_chunk_size
         self.audio_buffer = shared_memory.SharedMemory(create=True,size=buffer_num_audio_chunks*audio_chunk_size)
         self.audio_write_chunk_idx = Value('i',0)
         self.audio_read_chunk_idx = Value('i',0)
@@ -30,12 +33,17 @@ class AudioDelayer:
             if (self.audio_read_chunk_idx.value >= self.audio_write_chunk_idx.value):
                 time.sleep(audio_chunk_size/(bytes_per_sample*output_sampling_rate))
                 continue
-            sys.stdout.write("\rLatency: "+str((self.audio_write_chunk_idx.value-self.audio_read_chunk_idx.value)/(bytes_per_sample*output_sampling_rate)))
             wrapped_read_idx = (self.audio_read_chunk_idx.value*audio_chunk_size)%self.audio_buffer.size
             audio_chunk = self.audio_buffer.buf[wrapped_read_idx:wrapped_read_idx+audio_chunk_size]
             if (audio_chunk != None):
                 self.audio_play.stdin.write(audio_chunk)
                 self.audio_read_chunk_idx.value += 1
+
+    def get_audio_latency(self):
+        return self.audio_chunk_size*(self.audio_write_chunk_idx.value-self.audio_read_chunk_idx.value)/(self.bytes_per_sample*self.output_sampling_rate)
+
+    def inc_dec_latency(self, delta):
+        self.audio_read_chunk_idx.value -= delta
 
     def destroy(self):
         print("Killing subprocesses")
