@@ -14,7 +14,6 @@ class Rotary():
         # Rotary Switch Pin
         self.RoSPin = 27
 
-        self.counter = Value('i',0)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.RoSPin,GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # Set up a falling edge detect to callback clear
@@ -40,10 +39,9 @@ class Rotary():
                 # Reset flag
                 flag = 0
                 if (Last_RoB_Status == 0) and (Current_RoB_Status == 1):
-                    self.counter.value += 1
+                    callback(1)
                 if (Last_RoB_Status == 1) and (Current_RoB_Status == 0):
-                    self.counter.value -= 1
-                callback(self.counter.value)
+                    callback(-1)
 
 def IncDecCallback(counter):
     print("Counter: "+str(counter))
