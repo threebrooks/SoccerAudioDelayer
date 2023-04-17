@@ -1,0 +1,13 @@
+[Unit]
+Description=audio_delayer
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/home/pi/SoccerAudioDelayer/audio_delayer.sh
+
+[Install]
+WantedBy=multi-user.target
+
+
