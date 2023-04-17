@@ -19,6 +19,7 @@ class Rotary():
         # Set up a falling edge detect to callback clear
         GPIO.add_event_detect(self.RoSPin, GPIO.FALLING, callback=button_push_callback)
 
+        self.running = Value('b',True)
         self.pollThread = Process(target=self.pollFunc, args=(inc_dec_callback,))
         self.pollThread.start()
      
@@ -42,6 +43,11 @@ class Rotary():
                     callback(1)
                 if (Last_RoB_Status == 1) and (Current_RoB_Status == 0):
                     callback(-1)
+
+    def destroy(self):
+        for child in multiprocessing.active_children():
+            child.kill()
+        self.running.value = False
 
 def IncDecCallback(counter):
     print("Counter: "+str(counter))
