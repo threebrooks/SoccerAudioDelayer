@@ -29,7 +29,7 @@ class Rotary():
         GPIO.setup(self.RoBPin, GPIO.IN)
         Last_RoB_Status = 0
         Current_RoB_Status = 0
-        while(True):
+        while(self.running.value):
             flag = 0
             Last_RoB_Status = GPIO.input(self.RoBPin)
             # When RoAPin level changes
@@ -45,8 +45,6 @@ class Rotary():
                     callback(-1)
 
     def destroy(self):
-        for child in multiprocessing.active_children():
-            child.kill()
         self.running.value = False
 
 def IncDecCallback(counter):
