@@ -13,15 +13,23 @@ class Rotary():
         self.RoBPin = 17
         # Rotary Switch Pin
         self.RoSPin = 27
+        self.button_push_callback = button_push_callback
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.RoSPin,GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # Set up a falling edge detect to callback clear
-        GPIO.add_event_detect(self.RoSPin, GPIO.FALLING, callback=button_push_callback)
+        GPIO.add_event_detect(self.RoSPin, GPIO.BOTH, callback=self.button_push_handler)
 
         self.running = Value('b',True)
         self.pollThread = Process(target=self.pollFunc, args=(inc_dec_callback,))
         self.pollThread.start()
+
+    def button_push_handler(self, dummy):
+        if (GPIO.input(self.RoSPin) == 0):
+            downPress = True
+        else:
+            downPress = False
+        self.button_push_callback(downPress)
      
     def pollFunc(self, callback):
         GPIO.setmode(GPIO.BCM)

@@ -2,6 +2,8 @@ from AudioDelayerClass import AudioDelayer
 from RotaryClass import Rotary
 from LCD1602Class import LCD1602Class
 import time
+from enum import Enum
+import os
 
 lcd1602 = LCD1602Class()
 
@@ -27,18 +29,35 @@ audio_delayer = AudioDelayer(stream_url=stream_url, status_callback=AudioDelayer
 def RotaryIncDecCallback(delta):
     audio_delayer.inc_dec_latency(delta)
 
+class ButtonStateMachine(Enum):
+    NONE = 1
+    BUTTON_DOWN_AMBIGUOUS = 2
+    LATENCY_MEASURING = 3
+
+bsm = ButtonStateMachine.NONE
 last_button_push_time = None
-def RotaryButtonPushCallback(dummy):
+def RotaryButtonPushCallback(downPress):
     global last_button_push_time
     global lcd1602
-    if (last_button_push_time == None):
-        last_button_push_time = time.time()
-        lcd1602.write(1, "Measuring latency...")
+    global bsm
+    if (downPress):
+        if (bsm == ButtonStateMachine.NONE):
+            bsm = ButtonStateMachine.BUTTON_DOWN_AMBIGUOUS
+            last_button_push_time = time.time()
+        elif (bsm == ButtonStateMachine.LATENCY_MEASURING):
+            latency = time.time()-last_button_push_time
+            audio_delayer.set_audio_latency(latency)
+            lcd1602.write(1, "")
+            last_button_push_time = None
+            bsm = ButtonStateMachine.NONE
     else:
-        latency = time.time()-last_button_push_time
-        audio_delayer.set_audio_latency(latency)
-        lcd1602.write(1, "")
-        last_button_push_time = None
+        if (bsm == ButtonStateMachine.BUTTON_DOWN_AMBIGUOUS):
+            if ((time.time()-last_button_push_time) < 3.0):
+                lcd1602.write(1, "Measuring latency...")
+                bsm = ButtonStateMachine.LATENCY_MEASURING
+            else:
+                lcd1602.write(1, "Shutting down...")
+                os.system("sudo shutdown -h now")
 
 rotary = Rotary(RotaryIncDecCallback,RotaryButtonPushCallback)
 
