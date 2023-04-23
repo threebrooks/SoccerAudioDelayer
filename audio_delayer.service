@@ -3,6 +3,7 @@ Description=audio_delayer
 After=network.target
 
 [Service]
+User=pi
 Type=simple
 Restart=always
 ExecStart=/home/pi/SoccerAudioDelayer/audio_delayer.sh
