@@ -5,6 +5,7 @@ import atexit
 import time
 import sys
 import os
+import re
 
 def GetDefaultAudioDevice():
     output = subprocess.check_output(['aplay','-L']).decode('utf-8').split("\n")
@@ -32,8 +33,8 @@ class AudioDelayer:
 
     def pullerFunc(self, stream_url, output_sampling_rate, audio_chunk_size):
         while (self.running.value):
-            self.status_callback("Connecting to "+stream_url)
-            self.cvlc = subprocess.Popen(['cvlc',stream_url,'--sout','#transcode{acodec=s16l,channels=2,samplerate='+str(output_sampling_rate)+'}:std{access=file,mux=wav,dst=-}','vlc://quit'], stdout=subprocess.PIPE)
+            self.status_callback("Connecting "+stream_url[0])
+            self.cvlc = subprocess.Popen(['cvlc',stream_url[1],'--sout','#transcode{acodec=s16l,channels=2,samplerate='+str(output_sampling_rate)+'}:std{access=file,mux=wav,dst=-}','vlc://quit'], stdout=subprocess.PIPE)
             while (self.running.value):
                 if (self.cvlc.poll() != None):
                     break
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     try:
         def DummyStatusCallback(line1, line2):
             pass
-        audio_delayer = AudioDelayer(stream_url='http://stream.antenne.def:80/antenne', status_callback=DummyStatusCallback, output_sampling_rate=44100, bytes_per_sample=2, audio_chunk_size=88200, buffer_num_audio_chunks=2500)
+        audio_delayer = AudioDelayer(stream_url=('dummy','http://stream.antenne.def:80/antenne'), status_callback=DummyStatusCallback, output_sampling_rate=44100, bytes_per_sample=2, audio_chunk_size=88200, buffer_num_audio_chunks=2500)
     except KeyboardInterrupt:
         pass
 
