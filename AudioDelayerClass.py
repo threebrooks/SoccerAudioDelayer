@@ -10,7 +10,7 @@ import re
 def GetDefaultAudioDevice():
     output = subprocess.check_output(['aplay','-L']).decode('utf-8').split("\n")
     for line in output:
-        if (line.startswith("default:")):
+        if (line.startswith("default")):
             return line
     raise RuntimeError("Could not find default sound card!")
 
